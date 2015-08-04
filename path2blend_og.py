@@ -7,6 +7,8 @@
 ##see also http://dataorigami.blogspot.de/2009/07/how-to-draw-curve-in-blender-using.html
 
 ## needs to be run in interactive mode to assign speed-ipo to curve (possibly this action is not available through the python API...) http://blenderartists.org/forum/archive/index.php/t-149736.html
+## ob.setIpo(ipo) should assign speed-ipo to curve, however yields: TypeError: Ipo type does is not compatible
+
 
 ## vglrun /opt/compilation/blender-2.49b/build_minimal/bin/blender ~/blender/default.blend  -P ~/blender_py/poly-path2blender-curve_05.py -- -i path_02.txt -o path.blend -e 1
 
@@ -140,6 +142,8 @@ def main(): #
 
     scn= B.Scene.GetCurrent()
     ob = scn.objects.new(curve)
+    # ob = B.Object.New('Curve') # make curve object
+    # ob.link(curve) # link curve data with this object
 
     print ob.type
     print type(curve)
@@ -157,13 +161,64 @@ def main(): #
     #### manual editing see: http://blenderartists.org/forum/showthread.php?115409-Camera-and-path-speed
     #### python creation: http://www.packtpub.com/article/blender-2.49-scripting-shape-keys-ipo-and-poses
 
-    ipo= B.Ipo.New("Curve", "PathPos") #create new IPO-Object for a Curve-Ob
-    print ipo.curveConsts
+    print "Checking for existing IPOs: "
+    ipol = B.Ipo.Get()
+    #ipol = ob.getIpo()
 
-    ipc= ipo.getCurve("Speed")
-    if ipc == None:
-        print "Creating IPC 'Speed'"
-        ipc= ipo.addCurve("Speed")
+    for ipo in ipol:
+        print 'ipo name is',ipo.name
+        print ' its valid cuves are:', ipo.curveConsts
+        for icu in ipo:
+            print ' curve name is',icu.name
+
+
+    ipo= B.Ipo.New("Curve", "PathPos") #create new IPO-Object for a Curve-Ob
+    #ipo= B.Ipo.New("Path", "PathPos") #create new IPO-Object for a Curve-Ob
+    ipc= ipo.addCurve("Speed")
+
+    #ob.setIpo(B.Ipo.New('Object','Ipo'))
+    #ob.setIpo(ipo)
+    ob.ipo= ipo
+
+    ob.insertShapeKey() # Add the initial shape key which becomes the shapekey basis.
+    #Blender.Set('curframe', 15) # Move to another frame.
+    # c[0][0] = BezTriple.New(0.25, -5.19, 0) # Alter the point of the curve directly.
+    # cObj.insertShapeKey() # Insert another key at this point in time,
+    # curve.update() # Call update so you can see the resutls.
+    
+    # Add an IPO curve to drive the changes between the two shapes.
+    anIPO = B.Ipo.New("Key","MyKeyIpo")
+    curve.key.ipo = anIPO
+    #curve.key.ipo = ipo
+    keyblocks = curve.key.blocks
+    for block in keyblocks:
+        ipo_curve = anIPO.addCurve(block.name)
+        ipo_curve.append(B.BezTriple.New(1,0,0))
+        ipo_curve.append(B.BezTriple.New(25,1,0))
+
+
+    if ipo[B.Ipo.CU_SPEED]:
+        print "ipo[B.Ipo.CU_SPEED] now available."
+
+    print "Checking for existing IPOs: "
+    ipol = B.Ipo.Get()
+    #ipol = ob.getIpo()
+    for ipo in ipol:
+        print 'ipo name is',ipo.name
+        print ' its valid cuves are:', ipo.curveConsts
+        for icu in ipo:
+            print ' curve name is',icu.name
+
+
+    for channel in xrange(2):
+        ipo.channel = channel
+        print 'channel is',channel
+        print ' len is',len(ipo)
+        names = dict([(x[1],x[0]) for x in ipo.curveConsts.items()])
+        for curve in names:
+            print ' ',names[curve],'is',curve in ipo
+
+
 
     print "Printing icus of ipo: ",
     for icus in ipo:
@@ -187,7 +242,10 @@ def main(): #
         ipc.append(B.BezTriple.New(i+1,sum/t_sum,0))# +1: use speed for the section of the path that precedes
         i+= options.every
 
+    ipc.update()
     ipo[B.Ipo.CU_SPEED].interpolation = B.IpoCurve.InterpTypes.BEZIER
+
+    #ob.setIpo(ipo)
 
     B.Set("compressfile", 1)
     B.Save(options.output, 1)
