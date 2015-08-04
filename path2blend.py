@@ -33,28 +33,24 @@ import Blender as B
 
 def read_cf(fn):
 
-    #input_fields= 4 
     in_file= open(fn,  "r")
     dll= []
 
     while True:
-        #dl= [0] * input_fields #create a new list for each in_line!
         in_line = in_file.readline()
         if not in_line:
             break
 
         in_line = in_line[:-1] #drop last char '\n' ;-)
         if (len(in_line) == 0): #skip empty lines
-            continue 
+            continue
         if (in_line[0] == "#"): #skip comments
-            continue 
+            continue
         sl= in_line.split() #split at white space
         dl= [0] * len(sl) #create a new list for each in_line!
-        #dl= [0] * (len(sl) - 1) #create a new list for each in_line!
         for i in range(0, len(sl)):
-        #for i in range(0, len(dl)): #skipping reading of index-number
             dl[i]= float(sl[i])
-        dll.append(dl) 
+        dll.append(dl)
     in_file.close()
     return(dll)
 
@@ -63,57 +59,39 @@ def bezList2Curve(bezier_vecs, n):
     '''
     Take a list or vector triples and converts them into a bezier curve object
     '''
-    
+
     def bezFromVecs(vecs):
         '''
         Bezier triple from 3 vecs, shortcut functon
         '''
-        #bt= BezTriple.New(vecs[0].x, vecs[0].y, vecs[0].z,  vecs[1].x, vecs[1].y, vecs[1].z,  vecs[2].x, vecs[2].y, vecs[2].z)
         bt= B.BezTriple.New(vecs[0], vecs[1], vecs[2])
-        
-        #bt.handleTypes= (B.BezTriple.HandleTypes.FREE, B.BezTriple.HandleTypes.FREE)
+
         bt.handleTypes= (B.BezTriple.HandleTypes.AUTO, B.BezTriple.HandleTypes.AUTO)
-        
         return bt
-    
-               # Create the curve data with one point
+
+    # Create the curve data with one point
     cu= B.Curve.New()
     cu.appendNurb(bezFromVecs(bezier_vecs[0])) # We must add with a point to start with
     cu_nurb= cu[0] # Get the first curve just added in the CurveData
-    
-    
-    i= 1 # skip first vec triple because it was used to init the curve
 
+    i= 1 # skip first vec triple because it was used to init the curve
     while i<len(bezier_vecs):
         bt_vec_triple= bezier_vecs[i]
         bt= bezFromVecs(bt_vec_triple)
         cu_nurb.append(bt)
-#        i+=1
         i+=n
-
-    # ##Set both handles to auto for each point
-    # AUTO = B.BezTriple.HandleTypes.AUTO
-    # for point in cu_nurb:
-    #     point.handleTypes= [AUTO, AUTO]
 
     cu_nurb.flagU= 1 # Set curve cyclic
     cu.update()
 
-   
     # Add the Curve into the scene
     cu.setFlag(cu.getFlag() | 1) #3D-flag; new blender api?: cu.dimensions = "3D"
     cu.setFlag(cu.getFlag() | 8) #CurvePath-flag
     cu.setFlag(cu.getFlag() | 16) #CurveFollow-flag
-    #cu.flagU = 1 # Set curve cyclic
-    #scn= B.Scene.GetCurrent()
-    #ob = scn.objects.new(cu)
-    #return ob
     return cu
 
 
 def main(): #
-
-
 
     # get the args passed to blender after "--", all of which are ignored by blender specifically
     # so python may receive its own arguments
@@ -152,42 +130,26 @@ def main(): #
 
 
 
-    path_list= read_cf(options.input) 
+    path_list= read_cf(options.input)
     path_list= [ x for x in path_list if x[4] <= 1 ] ##skip branching nodes
-    #print path_list
     path_vecs= [ x[1:4] for x in path_list] ##just copy x y z columns
-    #path_ana= [ x[4] for x in path_list] 
-    path_speed= [ x[5] for x in path_list] 
-    #print path_vecs
-    #print len(path_list), len(path_vecs)
+    #path_ana= [ x[4] for x in path_list]
+    path_speed= [ x[5] for x in path_list]
+
     curve= bezList2Curve(path_vecs, options.every)
 
     scn= B.Scene.GetCurrent()
     ob = scn.objects.new(curve)
-    #curvedata = ob.data
-
-
-    #curve.setIpo(B.Ipo.New("Curve", "PathPos"))
-    #curve[0].ipo=(B.Ipo.New("Curve", "PathPos"))
-    #curve.ipo=(B.Ipo.New("Curve", "PathPos"))
-    #ob.insertShapeKey() 
-    #curve.insertShapeKey() 
-    #ob.insertPathKey() 
-    #curve.key.ipo=(B.Ipo.New("Key", "PathPos"))
-    #ob.key.ipo=(B.Ipo.New("Curve", "PathPos"))
-    #ob.insertIpoKey(B.Ipo.CU_SPEED)
-    #ob.ipo=(B.Ipo.New("Curve", "PathPos"))
-    #curvedata.ipo=(B.Ipo.New("Curve", "PathPos"))
 
     print ob.type
     print type(curve)
-    #print curve.subtype
     if type(curve) != B.Types.CurveType:
-        print ob.type 
-        print " is not of type " 
-        print B.Types.CurveType 
-        print " but of type: " 
+        print ob.type
+        print " is not of type "
+        print B.Types.CurveType
+        print " but of type: "
         print type(curve)
+
 
     #### add IPO-speed (F-Curves in > 2.5)
     #### http://wiki.blender.org/index.php/Dev:2.4/Source/Python/Ipo
@@ -195,82 +157,45 @@ def main(): #
     #### manual editing see: http://blenderartists.org/forum/showthread.php?115409-Camera-and-path-speed
     #### python creation: http://www.packtpub.com/article/blender-2.49-scripting-shape-keys-ipo-and-poses
 
-    #ipo= B.Ipo.Get('PathPos')
-    #ipo= curve.getIpo()
-    ipo= B.Ipo.New("Curve", "PathPos") #create new IPO-Object for a Curve-Ob    
-    # ipo= ob.getIpo()
-    # if ipo == None:
-    #     ipo= B.Ipo.New("Curve", "PathPos") #create new IPO-Object for a Curve-Object
-    #     #ipo= B.Ipo.New("Object", "PathPos") #create new IPO-Object for a Curve-Object
+    ipo= B.Ipo.New("Curve", "PathPos") #create new IPO-Object for a Curve-Ob
     print ipo.curveConsts
-    # #     ob.setIpo(ipo)
 
-    # print ipo.name, type(ipo)
-
-    # print "Printing icus of ipo: ",
-    # for icus in ipo:
-    #     print icus.name, 
-    # print "done"
-
-
-    # # icu= ipo[B.Ipo.CU_SPEED] #get Speed-Curve of IPO-Object
     ipc= ipo.getCurve("Speed")
-    #icu= ipo["Speed"]
-    #icu= B.Ipo.CU_SPEED #get Speed-Curve of IPO-Object
     if ipc == None:
         print "Creating IPC 'Speed'"
         ipc= ipo.addCurve("Speed")
-        #icu= ipo.addCurve(B.Ipo.CU_SPEED)
-
-    #ipc.append(B.BezTriple.New(1,0,0))
-
-    # # icu= ipo[B.Ipo.CU_SPEED] #get Speed-Curve of IPO-Object
-    # # print icu.name
 
     print "Printing icus of ipo: ",
     for icus in ipo:
-        print icus.name, 
+        print icus.name,
     print "done"
-    
-    # icu= B.Ipo.CU_SPEED #get Speed-Curve of IPO-Object
-    # #print icu
-    # #print ipo.getBlocktype()
-    
-    # #ipo[icu]= (1,x[1])
-    # #ipo[B.Ipo.CU_SPEED]= (1,x[1])
 
-    #i= 1+options.every
-    i= 0
+    ## calc total sum to create normalize Speed IPO
     t_sum= 0
+    i= 0
     while i<len(path_speed):
         t_sum+= path_speed[i]
         i+= options.every
 
     print t_sum
 
-    sum= 0
     ipc.append(B.BezTriple.New(0,0,0)) #zero's pos
-    #i= 1+options.every
-    i= 1
+    sum= 0
+    i= 0
     while i<len(path_speed):
-    #for i in range(0, len(path_speed)):
-        #ipo[B.Ipo.CU_SPEED]= (i, path_speed[i])
         sum+= path_speed[i]
-        ipc.append(B.BezTriple.New(i,sum/t_sum,0))
-        #ipc.append(path_speed[i])
-
+        ipc.append(B.BezTriple.New(i+1,sum/t_sum,0))# +1: use speed for the section of the path that precedes
         i+= options.every
 
-    #ipo[icu].interpolation = B.IpoCurve.InterpTypes.BEZIER
     ipo[B.Ipo.CU_SPEED].interpolation = B.IpoCurve.InterpTypes.BEZIER
-    #ob.setIpo(ipo)
-    #ob.setIpo(icu)
 
     B.Set("compressfile", 1)
     B.Save(options.output, 1)
 
+    #### ToDo
+    ## find a way to assign ipc to curveConst CU_SPEED
 
-	
+
 if __name__ == '__main__':
     main()
 
