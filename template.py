@@ -1,3 +1,4 @@
+## from: https://developer.blender.org/diffusion/B/browse/master/release/scripts/templates_py/background_job.py
 # This script is an example of how you can run blender from the command line
 # (in background mode with no interface) to automate tasks, in this example it
 # creates a text object, camera and light, then renders and/or saves it.
