@@ -2,6 +2,8 @@
 ### based on path2blend_og.py and template.py
 
 ### ToDo
+
+### Done
 ## port IPO creation from path2blend_og.py
 
 import bpy
@@ -38,7 +40,7 @@ def bezList2Curve(bezier_vecs, n):
     Take a list or vector triples and converts them into a bezier curve object
     '''
 
-    curvedata= bpy.data.curves.new(name='Curve', type='CURVE')  
+    curvedata= bpy.data.curves.new(name='CurveData', type='CURVE')  
     curvedata.dimensions = '3D'  
   
     polyline = curvedata.splines.new('NURBS')
@@ -113,6 +115,58 @@ def main():
     ob.location = (0,0,0) #object origin    
     bpy.context.scene.objects.link(ob)    
 
+    ## ideas from: http://blenderartists.org/forum/showthread.php?209181-A-Script-to-Import-a-CSV-File-and-Create-F-Curves-%28for-Blender-2-5x-or-later%29
+    #action= bpy.data.actions.new("Curve");
+    curve.animation_data_create()# http://www.blender.org/api/blender_python_api_2_75_3/bpy.types.AnimData.html#bpy.types.AnimData  http://www.blender.org/api/blender_python_api_2_75_3/bpy.types.ID.html#bpy.types.ID.animation_data_create
+    curve.animation_data.action= bpy.data.actions.new("PathPos")# http://www.blender.org/api/blender_python_api_2_75_3/bpy.types.BlendDataActions.html#bpy.types.BlendDataActions.new
+    ac= curve.animation_data.action
+    fc= ac.fcurves.new('eval_time')# http://www.blender.org/api/blender_python_api_2_75_3/bpy.types.ActionFCurves.html#bpy.types.ActionFCurves.new    'eval_time':  https://www.blender.org/forum/viewtopic.php?t=20371
+
+
+    ## calc total sum to create normalize Speed IPO
+    t_sum= 0
+    i= 0
+    while i<len(path_speed):
+        t_sum+= path_speed[i]
+        i+= args.every
+
+    print(t_sum)
+
+    fc.keyframe_points.insert(0, 0.0) #zero's pos
+    sum= 0
+    i= 0
+    while i<len(path_speed):
+        sum+= path_speed[i]
+        fc.keyframe_points.insert(i+1,sum/t_sum)# +1: use speed for the section of the path that precedes
+        i+= args.every
+
+
+    ## select path
+    bpy.ops.object.select_all(action='DESELECT')
+    #bpy.ops.object.select_name(name = "Path")#before 2.62
+    bpy.ops.object.select_pattern(pattern= "Path")#since 2.62: http://stackoverflow.com/questions/19472499/blender-2-6-select-object-by-name-through-python
+
+    ## select animation lay-out
+    ## http://blender.stackexchange.com/questions/8428/how-to-set-set-screen-type-with-python
+    print(bpy.context.window.screen)
+    print(bpy.data.screens)
+    for screen in bpy.data.screens:
+        print(screen.name) 
+
+    #bpy.context.window.screen = bpy.data.screens['Animation']#segfaults
+    bpy.ops.screen.screen_set(delta=-1)#workaround forbpy.context.window.screen = bpy.data.screens['Animation']
+    bpy.ops.screen.screen_set(delta=-1)#delta can only be +/-1
+
+    ## set 3D-View Cam clip: http://blenderartists.org/forum/archive/index.php/t-273243.html
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.spaces[0].clip_end = 9999999
+            area.spaces[0].region_3d.view_perspective = 'ORTHO' #'PERSP'|'CAMERA' #http://blenderartists.org/forum/archive/index.php/t-327216.html
+
+    #this only works for specific conditions: http://blender.stackexchange.com/questions/5359/how-to-set-cursor-location-pivot-point-in-script
+    # bpy.context.screen.areas['VIEW_3D'].clip_end = 9999999
+    # view3d = bpy.context.screen.areas[1].spaces[0]
+    # view3d.clip_end = 9999999
 
     if args.output:
         try:
