@@ -42,17 +42,17 @@ def bezList2Curve(bezier_vecs):
     Take a list or vector triples and converts them into a bezier curve object
     '''
 
-    curvedata= bpy.data.curves.new(name='CurveData', type='CURVE')  
-    curvedata.dimensions = '3D'  
-  
+    curvedata= bpy.data.curves.new(name='CurveData', type='CURVE')
+    curvedata.dimensions = '3D'
+
     polyline = curvedata.splines.new('NURBS')
-    polyline.points.add(len(bezier_vecs)-1)    
-    for num in range(len(bezier_vecs)):    
-        x, y, z = bezier_vecs[num]    
-        polyline.points[num].co = (x, y, z, 1)    
-    
-    polyline.order_u = len(polyline.points)-1  
-    polyline.use_endpoint_u = True  
+    polyline.points.add(len(bezier_vecs)-1)
+    for num in range(len(bezier_vecs)):
+        x, y, z = bezier_vecs[num]
+        polyline.points[num].co = (x, y, z, 1)
+
+    polyline.order_u = len(polyline.points)-1
+    polyline.use_endpoint_u = True
 
     return curvedata
 
@@ -112,9 +112,9 @@ def main():
 
     curve= bezList2Curve(path_vecs)
 
-    ob = bpy.data.objects.new("Path", curve)    
-    ob.location = (0,0,0) #object origin    
-    bpy.context.scene.objects.link(ob)    
+    ob = bpy.data.objects.new("Path", curve)
+    ob.location = (0,0,0) #object origin
+    bpy.context.scene.objects.link(ob)
 
     ## ideas from: http://blenderartists.org/forum/showthread.php?209181-A-Script-to-Import-a-CSV-File-and-Create-F-Curves-%28for-Blender-2-5x-or-later%29
     #action= bpy.data.actions.new("Curve");
@@ -126,14 +126,14 @@ def main():
 
     ## calc total sum to create normalize Speed IPO
     t_sum= 0
-    for i in range(len(path_speed)):    
+    for i in range(len(path_speed)):
         t_sum+= path_speed[i]
 
     print(t_sum)
 
     fc.keyframe_points.insert(0, 0.0) #zero's pos
     sum= 0
-    for i in range(len(path_speed)):    
+    for i in range(len(path_speed)):
         sum+= path_speed[i]
         fc.keyframe_points.insert(i+1,sum/t_sum)# +1: use speed for the section of the path that precedes
 
