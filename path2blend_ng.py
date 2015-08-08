@@ -209,6 +209,7 @@ def main():
     ## select animation lay-out
     ## http://blender.stackexchange.com/questions/8428/how-to-set-set-screen-type-with-python
     #bpy.context.window.screen = bpy.data.screens['Animation']#segfaults
+    #bpy.context.window_manager.windows[0].screen = bpy.data.screens['Animation']#segfaults
     bpy.ops.screen.screen_set(delta=-1)#workaround forbpy.context.window.screen = bpy.data.screens['Animation']
     bpy.ops.screen.screen_set(delta=-1)#delta can only be +/-1
 
@@ -217,8 +218,59 @@ def main():
         if area.type == 'VIEW_3D':
             area.spaces[0].clip_end = 9999999
             area.spaces[0].region_3d.view_perspective = 'ORTHO' #'PERSP'|'CAMERA' #http://blenderartists.org/forum/archive/index.php/t-327216.html
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    #override = bpy.context.copy()
+                    #override = {'area': area, 'region': region}
+                    override = {'window': bpy.context.window, 'screen': bpy.context.window.screen, 'area': area, 'region': region} #http://blender.stackexchange.com/questions/6101/poll-failed-context-incorrect-example-bpy-ops-view3d-background-image-add    http://www.blender.org/api/blender_python_api_2_69_1/bpy.ops.html#overriding-context
+                    #bpy.ops.view3d.view_all(override) #http://blender.stackexchange.com/questions/7418/zoom-to-selection-in-python-gives-runtimeerror
+
         if area.type == 'GRAPH_EDITOR':
             area.spaces[0].auto_snap= 'NONE' #http://www.blender.org/api/blender_python_api_2_75_3/bpy.types.SpaceGraphEditor.html?highlight=auto_snap#bpy.types.SpaceGraphEditor.auto_snap
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    override = bpy.context.copy()
+                    #override = {'area': area, 'region': region}
+                    override = {'window': bpy.context.window, 'screen': bpy.data.screens['Animation'], 'area': area, 'region': region}
+                    #override = {'window': bpy.context.window, 'screen': bpy.data.screens['Animation'], 'area': bpy.context.screen.areas['GRAPH_EDITOR'], 'region': bpy.context.screen.areas['GRAPH_EDITOR'].regions['WINDOW']}
+                    #bpy.ops.graph.view_all(override)
+
+
+    ## http://blenderartists.org/forum/showthread.php?269166-Operator-bpy-ops-uv-project_from_view-poll%28%29-failed-context-is-incorrect
+    # for window in bpy.context.window_manager.windows:
+    #     screen = window.screen
+    #     for area in screen.areas:
+    #         print(window, screen, area.type)
+    #         if area.type == 'VIEW_3D':
+    #             for space in area.spaces:
+    #                 print(window, screen, area.type, space.type)
+    #                 if space.type == 'VIEW_3D':
+    #                     for region in area.regions:
+    #                         print(window, screen, area.type, space.type, region.type)
+    #                         if region.type == 'WINDOW':
+    #                             override = {'window': window, 'screen': screen, 'area': area, 'space': space, 'region': region, 'edit_object': bpy.context.edit_object, 'scene': bpy.context.scene, 'blend_data': bpy.context.blend_data}
+    #                             #bpy.ops.uv.project_from_view(override, orthographic=False, correct_aspect=True, clip_to_bounds=False, scale_to_bounds=True)
+    #                             print(window, screen, area.type, space.type, region.type)
+    #                             if bpy.ops.graph.view_all.poll():
+    #                                 print("can poll")
+    #                                 bpy.ops.view3d.view_all(override)
+    #                             else:
+    #                                 print("can't poll")
+                  
+    for window in bpy.context.window_manager.windows:
+        screen = window.screen
+        for area in screen.areas:
+            for space in area.spaces:
+                for region in area.regions:
+                    print(window, screen, area.type, space.type, region.type)
+                    override = {'window': window, 'screen': screen, 'area': area, 'space': space, 'region': region, 'scene': bpy.context.scene}
+                                #bpy.ops.uv.project_from_view(override, orthographic=False, correct_aspect=True, clip_to_bounds=False, scale_to_bounds=True)
+                    if bpy.ops.view3d.view_all.poll():
+                        print("can poll")
+                        bpy.ops.view3d.view_all(override)
+                    # else:
+                    #     print("can't poll")
+                  
 
     #this only works for specific conditions: http://blender.stackexchange.com/questions/5359/how-to-set-cursor-location-pivot-point-in-script
     # bpy.context.screen.areas['VIEW_3D'].clip_end = 9999999
