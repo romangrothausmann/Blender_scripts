@@ -47,7 +47,7 @@ def bezList2Curve(bezier_vecs):
     curvedata.dimensions = '3D'
 
     segLength= []
-    polyline = curvedata.splines.new('NURBS')
+    polyline = curvedata.splines.new('POLY')
     polyline.points.add(len(bezier_vecs)-1)
     for i in range(len(bezier_vecs)-1):
         x, y, z = bezier_vecs[i]
