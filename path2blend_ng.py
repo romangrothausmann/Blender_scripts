@@ -217,6 +217,8 @@ def main():
         if area.type == 'VIEW_3D':
             area.spaces[0].clip_end = 9999999
             area.spaces[0].region_3d.view_perspective = 'ORTHO' #'PERSP'|'CAMERA' #http://blenderartists.org/forum/archive/index.php/t-327216.html
+        if area.type == 'GRAPH_EDITOR':
+            area.spaces[0].auto_snap= 'NONE' #http://www.blender.org/api/blender_python_api_2_75_3/bpy.types.SpaceGraphEditor.html?highlight=auto_snap#bpy.types.SpaceGraphEditor.auto_snap
 
     #this only works for specific conditions: http://blender.stackexchange.com/questions/5359/how-to-set-cursor-location-pivot-point-in-script
     # bpy.context.screen.areas['VIEW_3D'].clip_end = 9999999
