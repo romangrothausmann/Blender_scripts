@@ -2,13 +2,14 @@
 ### based on path2blend_og.py and template.py
 
 ### ToDo
-## take variing polyline segment lengths into account
 ## interpolate bezier/spline length
 
 ### Done
 ## port IPO creation from path2blend_og.py
+## take variing polyline segment lengths into account
 
 import bpy
+import mathutils
 
 
 def read_cf(fn):
@@ -45,16 +46,26 @@ def bezList2Curve(bezier_vecs):
     curvedata= bpy.data.curves.new(name='CurveData', type='CURVE')
     curvedata.dimensions = '3D'
 
+    segLength= []
     polyline = curvedata.splines.new('NURBS')
     polyline.points.add(len(bezier_vecs)-1)
-    for num in range(len(bezier_vecs)):
-        x, y, z = bezier_vecs[num]
-        polyline.points[num].co = (x, y, z, 1)
+    for i in range(len(bezier_vecs)-1):
+        x, y, z = bezier_vecs[i]
+        polyline.points[i].co = (x, y, z, 1) #http://wiki.blender.org/index.php/Doc:2.4/Manual/Modeling/Curves#Weight
+        p1= mathutils.Vector(bezier_vecs[i]) #http://www.blender.org/api/blender_python_api_2_75_3/mathutils.html#mathutils.Vector
+        p2= mathutils.Vector(bezier_vecs[i+1])
+        dist = (p1 - p2).length
+        segLength.append(dist)
+
+    ## last point separate, just adding last dist again to segLength
+    x, y, z = bezier_vecs[i+1]
+    polyline.points[i+1].co = (x, y, z, 1)
+    segLength.append(dist)
 
     polyline.order_u = len(polyline.points)-1
     polyline.use_endpoint_u = True
 
-    return curvedata
+    return(curvedata, segLength)
 
 
 def main():
@@ -110,7 +121,9 @@ def main():
     path_ana= [ x[4] for x in path_list]
     path_speed= [ x[5] for x in path_list]
 
-    curve= bezList2Curve(path_vecs)
+    curve, segLength= bezList2Curve(path_vecs)
+
+    print("Min: ", min(segLength)," Max: ", max(segLength))
 
     ob = bpy.data.objects.new("Path", curve)
     ob.location = (0,0,0) #object origin
@@ -127,14 +140,14 @@ def main():
     ## calc total sum to create normalize Speed IPO
     t_sum= 0
     for i in range(len(path_speed)):
-        t_sum+= path_speed[i]
+        t_sum+= path_speed[i] * segLength[i]
 
     print(t_sum)
 
     fc.keyframe_points.insert(0, 0.0) #zero's pos
     sum= 0
     for i in range(len(path_speed)):
-        sum+= path_speed[i]
+        sum+= path_speed[i] * segLength[i]
         fc.keyframe_points.insert(i+1,sum/t_sum)# +1: use speed for the section of the path that precedes
 
 
