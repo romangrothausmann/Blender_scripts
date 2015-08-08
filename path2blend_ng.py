@@ -2,6 +2,8 @@
 ### based on path2blend_og.py and template.py
 
 ### ToDo
+## take variing polyline segment lengths into account
+## interpolate bezier/spline length
 
 ### Done
 ## port IPO creation from path2blend_og.py
@@ -33,7 +35,7 @@ def read_cf(fn):
     return(dll)
 
 
-def bezList2Curve(bezier_vecs, n):
+def bezList2Curve(bezier_vecs):
     ## http://blenderscripting.blogspot.de/2011/05/blender-25-python-bezier-from-list-of.html
 
     '''
@@ -76,7 +78,6 @@ def main():
 
     parser.add_argument("-i", "--input", dest="input", metavar='FILE', required=True, help="Input path contained in a text file.")
     parser.add_argument("-o", "--output", dest="output", metavar='FILE', required=True, help="Output file to save the blender curve in. Suffix sets the format: Blender (.blend); DXF (.dxf); STL (.stl); Videoscape (.obj); VRML 1.0 (.wrl)")
-    parser.add_argument("-e", "--every", dest="every", type=int, required=True, default=1, help="Only import every Nth vertex.")
 
     args = parser.parse_args(argv)  # In this example we wont use the args
 
@@ -109,7 +110,7 @@ def main():
     path_ana= [ x[4] for x in path_list]
     path_speed= [ x[5] for x in path_list]
 
-    curve= bezList2Curve(path_vecs, args.every)
+    curve= bezList2Curve(path_vecs)
 
     ob = bpy.data.objects.new("Path", curve)    
     ob.location = (0,0,0) #object origin    
@@ -125,20 +126,16 @@ def main():
 
     ## calc total sum to create normalize Speed IPO
     t_sum= 0
-    i= 0
-    while i<len(path_speed):
+    for i in range(len(path_speed)):    
         t_sum+= path_speed[i]
-        i+= args.every
 
     print(t_sum)
 
     fc.keyframe_points.insert(0, 0.0) #zero's pos
     sum= 0
-    i= 0
-    while i<len(path_speed):
+    for i in range(len(path_speed)):    
         sum+= path_speed[i]
         fc.keyframe_points.insert(i+1,sum/t_sum)# +1: use speed for the section of the path that precedes
-        i+= args.every
 
 
     ## select path
@@ -148,11 +145,6 @@ def main():
 
     ## select animation lay-out
     ## http://blender.stackexchange.com/questions/8428/how-to-set-set-screen-type-with-python
-    print(bpy.context.window.screen)
-    print(bpy.data.screens)
-    for screen in bpy.data.screens:
-        print(screen.name) 
-
     #bpy.context.window.screen = bpy.data.screens['Animation']#segfaults
     bpy.ops.screen.screen_set(delta=-1)#workaround forbpy.context.window.screen = bpy.data.screens['Animation']
     bpy.ops.screen.screen_set(delta=-1)#delta can only be +/-1
