@@ -2,12 +2,12 @@
 ### based on path2blend_og.py and template.py
 
 ### ToDo
-## interpolate bezier/spline length
 
 ### Done
 ## port IPO creation from path2blend_og.py
 ## take variing polyline segment lengths into account
 ## changed from NURBS/POLY to BEZIER curve, needs special changes: http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates#comment30542_6751  http://blenderscripting.blogspot.de/2013/06/scripting-3d-bezier-spline-surface.html
+## interpolate bezier/spline length
 
 import bpy
 import mathutils
@@ -37,6 +37,57 @@ def read_cf(fn):
     return(dll)
 
 
+def bezSegLength(spline):
+    #http://blender.stackexchange.com/questions/688/getting-the-list-of-points-that-describe-a-curve-without-converting-to-mesh
+    #https://gist.github.com/zeffii/5724956
+
+    segLengthList= []
+    knots = spline.bezier_points
+    segments = len(knots)
+
+    if segments < 2:
+        return
+
+    ## verts per segment
+    r = spline.resolution_u + 1
+
+    ## segments in spline
+    if not spline.use_cyclic_u:
+        segments -= 1
+
+    #master_point_list = []
+    for i in range(segments):
+        inext = (i + 1) % len(knots)
+        knot1 = knots[i].co
+        handle1 = knots[i].handle_right
+        handle2 = knots[inext].handle_left
+        knot2 = knots[inext].co
+        bezier = knot1, handle1, handle2, knot2, r
+        points = mathutils.geometry.interpolate_bezier(*bezier)
+        #master_point_list.extend(points)
+
+        ## knot1 to first sub-point
+        p1= knot1
+        p2= points[0]
+        segLength= (p1 - p2).length
+
+        ## sub-point segments
+        for j in range(len(points)-1):
+            p1= points[j]
+            p2= points[j+1]
+            segLength+= (p1 - p2).length
+
+        ## last sub-point to knot2
+        p1= points[-1]
+        p2= knot2
+        segLength+= (p1 - p2).length
+
+        ## append segLength to segLengthList
+        segLengthList.append(segLength)
+
+    return(segLengthList)
+
+
 def bezList2Curve(bezier_vecs):
     ## http://blenderscripting.blogspot.de/2011/05/blender-25-python-bezier-from-list-of.html
 
@@ -47,32 +98,21 @@ def bezList2Curve(bezier_vecs):
     curvedata= bpy.data.curves.new(name='CurveData', type='CURVE')
     curvedata.dimensions = '3D'
 
-    segLength= []
-    polyline = curvedata.splines.new('BEZIER')
+    polyline= curvedata.splines.new('BEZIER')
+    polyline.resolution_u= 100
     polyline.bezier_points.add(len(bezier_vecs)-1) #http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
-    for i in range(len(bezier_vecs)-1):
+    for i in range(len(bezier_vecs)):
         x, y, z = bezier_vecs[i]
         polyline.bezier_points[i].co = (x, y, z) #http://wiki.blender.org/index.php/Doc:2.4/Manual/Modeling/Curves#Weight
         ##setting handle type is essential if no handle coords are set!!! http://blenderscripting.blogspot.de/2013/06/scripting-3d-bezier-spline-surface.html
         polyline.bezier_points[i].handle_left_type = 'AUTO'
         polyline.bezier_points[i].handle_right_type = 'AUTO'
-        p1= mathutils.Vector(bezier_vecs[i]) #http://www.blender.org/api/blender_python_api_2_75_3/mathutils.html#mathutils.Vector
-        p2= mathutils.Vector(bezier_vecs[i+1])
-        dist = (p1 - p2).length
-        segLength.append(dist)
-
-    ## last point separate, just adding last dist again to segLength
-    x, y, z = bezier_vecs[i+1]
-    polyline.bezier_points[i+1].co = (x, y, z)
-    polyline.bezier_points[i+1].handle_left_type = 'AUTO'
-    polyline.bezier_points[i+1].handle_right_type = 'AUTO'
-    segLength.append(dist)
 
     polyline.order_u = len(polyline.points)-1
     polyline.use_endpoint_u = True
     polyline.use_cyclic_u = False
 
-    return(curvedata, segLength)
+    return(curvedata)
 
 
 def main():
@@ -128,8 +168,8 @@ def main():
     path_ana= [ x[4] for x in path_list]
     path_speed= [ x[5] for x in path_list]
 
-    curve, segLength= bezList2Curve(path_vecs)
-
+    curve= bezList2Curve(path_vecs)
+    segLength= bezSegLength(curve.splines[0])
     print("Min: ", min(segLength)," Max: ", max(segLength))
 
     ob = bpy.data.objects.new("Path", curve)
@@ -146,14 +186,14 @@ def main():
 
     ## calc total sum to create normalize Speed IPO
     t_sum= 0
-    for i in range(len(path_speed)):
+    for i in range(len(path_speed)-1): #-1: for # segments in non-cyclic curves
         t_sum+= path_speed[i] * segLength[i]
 
     print(t_sum)
 
     fc.keyframe_points.insert(0, 0.0) #zero's pos
     sum= 0
-    for i in range(len(path_speed)):
+    for i in range(len(path_speed)-1): #-1: for # segments in non-cyclic curves
         sum+= path_speed[i] * segLength[i]
         fc.keyframe_points.insert(i+1,sum/t_sum)# +1: use speed for the section of the path that precedes
 
