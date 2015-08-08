@@ -7,6 +7,7 @@
 ### Done
 ## port IPO creation from path2blend_og.py
 ## take variing polyline segment lengths into account
+## changed from NURBS/POLY to BEZIER curve, needs special changes: http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates#comment30542_6751  http://blenderscripting.blogspot.de/2013/06/scripting-3d-bezier-spline-surface.html
 
 import bpy
 import mathutils
@@ -47,11 +48,14 @@ def bezList2Curve(bezier_vecs):
     curvedata.dimensions = '3D'
 
     segLength= []
-    polyline = curvedata.splines.new('POLY')
-    polyline.points.add(len(bezier_vecs)-1)
+    polyline = curvedata.splines.new('BEZIER')
+    polyline.bezier_points.add(len(bezier_vecs)-1) #http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     for i in range(len(bezier_vecs)-1):
         x, y, z = bezier_vecs[i]
-        polyline.points[i].co = (x, y, z, 1) #http://wiki.blender.org/index.php/Doc:2.4/Manual/Modeling/Curves#Weight
+        polyline.bezier_points[i].co = (x, y, z) #http://wiki.blender.org/index.php/Doc:2.4/Manual/Modeling/Curves#Weight
+        ##setting handle type is essential if no handle coords are set!!! http://blenderscripting.blogspot.de/2013/06/scripting-3d-bezier-spline-surface.html
+        polyline.bezier_points[i].handle_left_type = 'AUTO'
+        polyline.bezier_points[i].handle_right_type = 'AUTO'
         p1= mathutils.Vector(bezier_vecs[i]) #http://www.blender.org/api/blender_python_api_2_75_3/mathutils.html#mathutils.Vector
         p2= mathutils.Vector(bezier_vecs[i+1])
         dist = (p1 - p2).length
@@ -59,11 +63,14 @@ def bezList2Curve(bezier_vecs):
 
     ## last point separate, just adding last dist again to segLength
     x, y, z = bezier_vecs[i+1]
-    polyline.points[i+1].co = (x, y, z, 1)
+    polyline.bezier_points[i+1].co = (x, y, z)
+    polyline.bezier_points[i+1].handle_left_type = 'AUTO'
+    polyline.bezier_points[i+1].handle_right_type = 'AUTO'
     segLength.append(dist)
 
     polyline.order_u = len(polyline.points)-1
     polyline.use_endpoint_u = True
+    polyline.use_cyclic_u = False
 
     return(curvedata, segLength)
 
