@@ -187,16 +187,19 @@ def main():
     ## calc total sum to create normalize Speed IPO
     t_sum= 0
     for i in range(len(path_speed)-1): #-1: for # segments in non-cyclic curves
-        t_sum+= path_speed[i] * segLength[i]
+        t_sum+= segLength[i]
 
     print(t_sum)
 
     fc.keyframe_points.insert(0, 0.0) #zero's pos
     sum= 0
+    timeSum= 0
     for i in range(len(path_speed)-1): #-1: for # segments in non-cyclic curves
-        sum+= path_speed[i] * segLength[i]
-        fc.keyframe_points.insert(i+1,sum/t_sum)# +1: use speed for the section of the path that precedes
-
+        sum+= segLength[i] #acc. length
+        timeSum+= segLength[i] / path_speed[i] #acc. time steps
+        kf= fc.keyframe_points.insert(timeSum, sum/t_sum)
+        kf.interpolation= 'BEZIER' #http://blender.stackexchange.com/questions/33729/how-to-script-animation-fcurve-made-autoclamped
+        #kf.handle_left_type = 'AUTO_CLAMPED'
 
     ## select path
     bpy.ops.object.select_all(action='DESELECT')
