@@ -94,12 +94,14 @@ def bezList2Curve(bezier_vecs):
     '''
     Take a list or vector triples and converts them into a bezier curve object
     '''
+    curveRes= 20#a value of 100 caused wiggling cam! 20, 99 or 101, 200 were OK...
 
     curvedata= bpy.data.curves.new(name='CurveData', type='CURVE')
     curvedata.dimensions = '3D'
+    curvedata.resolution_u= curveRes #changing this value can avoid wiggling cam! http://www.blender.org/api/blender_python_api_2_75_3/bpy.types.Curve.html#bpy.types.Curve.resolution_u
 
     polyline= curvedata.splines.new('BEZIER')
-    polyline.resolution_u= 100
+    polyline.resolution_u= curveRes #NOT the same as curvedata.resolution_u, setting curvedata.resolution_u in GUI (curve->Shape) also sets polyline.resolution_u (curve->Active Spline) but not vise-versa http://www.blender.org/api/blender_python_api_2_75_3/bpy.types.Spline.html#bpy.types.Spline.resolution_u
     polyline.bezier_points.add(len(bezier_vecs)-1) #http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     for i in range(len(bezier_vecs)):
         x, y, z = bezier_vecs[i]
