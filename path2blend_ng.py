@@ -172,7 +172,7 @@ def main():
 
     curve= bezList2Curve(path_vecs)
     segLength= bezSegLength(curve.splines[0])
-    print("Min: ", min(segLength)," Max: ", max(segLength))
+    print("Path segment lengths: Min: ", min(segLength)," Max: ", max(segLength)," Mean: ", sum(segLength)/float(len(segLength)))
 
     ob = bpy.data.objects.new("Path", curve)
     ob.location = (0,0,0) #object origin
@@ -187,19 +187,17 @@ def main():
 
 
     ## calc total sum to create normalize Speed IPO
-    t_sum= 0
-    for i in range(len(path_speed)-1): #-1: for # segments in non-cyclic curves
-        t_sum+= segLength[i]
+    tLengSum= sum(segLength)
 
-    print(t_sum)
+    print("Total path length: ", tLengSum, "  with an interpolation resolution of: ", curve.resolution_u)
 
     fc.keyframe_points.insert(0, 0.0) #zero's pos
-    sum= 0
+    lengSum= 0
     timeSum= 0
     for i in range(len(path_speed)-1): #-1: for # segments in non-cyclic curves
-        sum+= segLength[i] #acc. length
+        lengSum+= segLength[i] #acc. length
         timeSum+= segLength[i] / path_speed[i] #acc. time steps
-        kf= fc.keyframe_points.insert(timeSum, sum/t_sum)
+        kf= fc.keyframe_points.insert(timeSum, lengSum/tLengSum)
         kf.interpolation= 'BEZIER' #http://blender.stackexchange.com/questions/33729/how-to-script-animation-fcurve-made-autoclamped
         #kf.handle_left_type = 'AUTO_CLAMPED'
 
