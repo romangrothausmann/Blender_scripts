@@ -172,7 +172,7 @@ def main():
 
     curve= bezList2Curve(path_vecs)
     segLength= bezSegLength(curve.splines[0])
-    print("Path segment lengths: Min: ", min(segLength)," Max: ", max(segLength)," Mean: ", sum(segLength)/float(len(segLength)))
+    print("Path segment lengths: Min: ", min(segLength), "@", segLength.index(min(segLength))," Max: ", max(segLength), "@", segLength.index(max(segLength))," Mean: ", sum(segLength)/float(len(segLength)))
 
     ob = bpy.data.objects.new("Path", curve)
     ob.location = (0,0,0) #object origin
