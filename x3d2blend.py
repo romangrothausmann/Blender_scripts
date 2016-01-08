@@ -22,7 +22,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=usage_text)
 
-    parser.add_argument("-i", "--input", dest="input", metavar='FILE', required=True, help="Input path contained in a text file.")
+    parser.add_argument("-i", "--input", dest="input", metavar='FILE', required=True, help="Input X3D/vrml/wrl file.")
     parser.add_argument("-o", "--output", dest="output", metavar='FILE', required=True, help="Output file to save the blender curve in. Suffix sets the format: Blender (.blend); DXF (.dxf); STL (.stl); Videoscape (.obj); VRML 1.0 (.wrl)")
 
     args = parser.parse_args(argv)  # In this example we wont use the args
@@ -51,6 +51,8 @@ def main():
 
 
 
+    bpy.ops.import_scene.x3d(filepath= args.input) # http://www.blender.org/api/blender_python_api_2_76b_release/bpy.ops.import_scene.html#bpy.ops.import_scene.x3d
+    bpy.context.scene.camera = bpy.data.objects['Viewpoint']
 
 
     if args.output:
