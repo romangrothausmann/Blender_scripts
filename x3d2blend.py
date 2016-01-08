@@ -54,6 +54,15 @@ def main():
     bpy.ops.import_scene.x3d(filepath= args.input) # http://www.blender.org/api/blender_python_api_2_76b_release/bpy.ops.import_scene.html#bpy.ops.import_scene.x3d
     bpy.context.scene.camera = bpy.data.objects['Viewpoint']
 
+    for obj in scene.objects:
+        if obj.type == 'LAMP':
+            scene.objects.unlink(obj)
+        if obj.type == 'MESH':
+            obj.name= args.input
+            obj.data.name= args.input
+            for i, mat in enumerate(obj.data.materials):
+                mat.name= args.input+str(i)
+
 
     if args.output:
         try:
