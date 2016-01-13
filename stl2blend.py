@@ -22,7 +22,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=usage_text)
 
-    parser.add_argument("-i", "--input", dest="input", metavar='FILE', required=True, help="Input path contained in a text file.")
+    parser.add_argument("-i", "--input", dest="input", metavar='FILE', required=True, help="Input STL file.")
     parser.add_argument("-o", "--output", dest="output", metavar='FILE', required=True, help="Output file to save the blender curve in. Suffix sets the format: Blender (.blend); DXF (.dxf); STL (.stl); Videoscape (.obj); VRML 1.0 (.wrl)")
 
     args = parser.parse_args(argv)  # In this example we wont use the args
@@ -51,6 +51,14 @@ def main():
 
 
 
+    bpy.ops.import_mesh.stl(filepath= args.input) # https://www.blender.org/api/blender_python_api_2_76b_release/bpy.ops.import_mesh.html
+
+    for obj in scene.objects:
+        if obj.type == 'MESH':
+            obj.name= args.input
+            obj.data.name= args.input
+            for i, mat in enumerate(obj.data.materials):
+                mat.name= args.input+str(i)
 
 
     if args.output:
