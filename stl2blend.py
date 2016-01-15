@@ -43,12 +43,12 @@ def main():
 
 
 
-    # Clear existing objects.
     scene = bpy.context.scene
-    scene.camera = None
-    for obj in scene.objects:
-        scene.objects.unlink(obj)
+    bpy.ops.object.select_all(action='SELECT') # default action is toggle
+    bpy.ops.object.delete() # delete all selected objects
 
+    for item in bpy.data.meshes:
+        bpy.data.meshes.remove(item) # delete all meshes http://blenderscripting.blogspot.de/2012/03/deleting-objects-from-scene.html
 
 
     bpy.ops.import_mesh.stl(filepath= args.input) # https://www.blender.org/api/blender_python_api_2_76b_release/bpy.ops.import_mesh.html
@@ -57,6 +57,7 @@ def main():
         if obj.type == 'MESH':
             obj.name= args.input
             obj.data.name= args.input
+            obj.draw_type= 'BOUNDS'
             for i, mat in enumerate(obj.data.materials):
                 mat.name= args.input+str(i)
 
