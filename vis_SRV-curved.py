@@ -7,7 +7,7 @@ import bpy
 
 
 
-def loadX3DandTex(fnX3D, pref, suff, yscale):
+def loadX3DandTex(fnX3D, pref, suff, yscale, resetUV= False):
 
     scene = bpy.context.scene
     bpy.ops.import_scene.x3d(filepath= fnX3D) # reader1 = pvs.OpenDataFile("yz-plane.vtp", guiName="plane-"+s+"_x@0250")
@@ -23,6 +23,12 @@ def loadX3DandTex(fnX3D, pref, suff, yscale):
             guiName= pref + "_" + suff
             obj.name= guiName
             obj.data.name= guiName
+
+            if(resetUV): # http://science-o-matics.com/2013/04/how-to-python-scripting-in-blender-2-material-und-textur/
+                bpy.context.scene.objects.active = obj
+                bpy.ops.object.mode_set(mode='EDIT') # switch to edit mode
+                bpy.ops.uv.reset()
+                bpy.ops.object.mode_set(mode='OBJECT') # switch back to object mode
 
             mat = bpy.data.materials.new(guiName + "_m")
             mat.specular_color= [0, 0, 0] # black to remove specular effects
@@ -99,7 +105,7 @@ def main():
     zList = [129, 640, 1131, 1533, 1601, 1773, 2156, 2190, 2389, 2497, 2578, 2692, 2945, 3041, 3250, 4046]
     #zList = [129, 640, 1131, 2692, 3250, 4046]
     for i, z in enumerate(zList):
-        loadX3DandTex(fnX3D= "xy-plane_%04d.x3d"%(z), pref= "plane", suff= "z@%04d"%(z), yscale=1)
+        loadX3DandTex(fnX3D= "xy-plane_%04d.x3d"%(z), pref= "plane", suff= "z@%04d"%(z), yscale=1, resetUV= True)
 
  
     bpy.ops.object.select_all(action='DESELECT') # default action is toggle
