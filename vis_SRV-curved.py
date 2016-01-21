@@ -6,6 +6,52 @@
 import bpy
 
 
+
+def loadX3DandTex(fnX3D, pref, suff, yscale):
+
+    scene = bpy.context.scene
+    bpy.ops.import_scene.x3d(filepath= fnX3D) # reader1 = pvs.OpenDataFile("yz-plane.vtp", guiName="plane-"+s+"_x@0250")
+
+    impObjs = bpy.context.selected_objects[:] # all imported objects http://blender.stackexchange.com/questions/24133/modify-obj-after-import-using-python
+
+    for obj in impObjs:
+        if obj.type != 'MESH':
+            scene.objects.unlink(obj)
+        else:
+            obj.data.materials.clear() # http://blender.stackexchange.com/questions/2362/how-to-unlink-material-from-a-mesh-with-python-script
+
+            guiName= pref + "_" + suff
+            obj.name= guiName
+            obj.data.name= guiName
+
+            mat = bpy.data.materials.new(guiName + "_m")
+            mat.specular_color= [0, 0, 0] # black to remove specular effects
+            obj.data.materials.append(mat)
+
+            layerList= ['G', 'A', 'B']
+            for j, s in enumerate(layerList):
+
+                fnPNG= pref + "-" + s + "_" + suff + ".png"
+                print(fnPNG)
+
+                try:
+                    img = bpy.data.images.load(fnPNG)
+                except:
+                    raise NameError("Cannot load image %s" % fnPNG)
+
+                cTex= bpy.data.textures.new(fnPNG, type = 'IMAGE') # texProxy.GetProperty("FileName").SetElement(0, fnPNG)
+                cTex.image= img
+                
+                mtex = mat.texture_slots.add() # Add texture slot for color texture
+                mtex.scale[1]= yscale
+                mtex.texture = cTex
+                mtex.texture_coords = 'UV'
+                mtex.use_map_color_diffuse = True 
+                mtex.mapping = 'FLAT' 
+
+    return impObjs
+
+
 def main():
     import sys       # to get command line args
     import argparse  # to parse options for us and print a nice help message
@@ -47,51 +93,16 @@ def main():
         scene.objects.unlink(obj)
 
 
+    loadX3DandTex(fnX3D= "yz-plane.x3d", pref= "plane", suff="x@0250", yscale=-1)
+    loadX3DandTex(fnX3D= "xz-plane.x3d", pref= "plane", suff="y@0250", yscale=-1)
 
-    bpy.ops.import_scene.x3d(filepath="yz-plane.x3d") # reader1 = pvs.OpenDataFile("yz-plane.vtp", guiName="plane-"+s+"_x@0250")
+    zList = [129, 640, 1131, 1533, 1601, 1773, 2156, 2190, 2389, 2497, 2578, 2692, 2945, 3041, 3250, 4046]
+    #zList = [129, 640, 1131, 2692, 3250, 4046]
+    for i, z in enumerate(zList):
+        loadX3DandTex(fnX3D= "xy-plane_%04d.x3d"%(z), pref= "plane", suff= "z@%04d"%(z), yscale=1)
 
-    impObjs = bpy.context.selected_objects[:] # all imported objects http://blender.stackexchange.com/questions/24133/modify-obj-after-import-using-python
-
-    for obj in impObjs:
-        if obj.type != 'MESH':
-            scene.objects.unlink(obj)
-        else:
-            obj.data.materials.clear() # http://blender.stackexchange.com/questions/2362/how-to-unlink-material-from-a-mesh-with-python-script
-
-            guiName= "plane_x@0250"
-            obj.name= guiName
-            obj.data.name= guiName
-
-            mat = bpy.data.materials.new(guiName + "_m")
-            mat.specular_color= [0, 0, 0] # black to remove specular effects
-            obj.data.materials.append(mat)
-
-            layerList= ['G', 'A', 'B']
-            for j, s in enumerate(layerList):
-
-                guiName= "plane-"+s+"_x@0250"
-                fnPNG= guiName + ".png"
-                print(fnPNG)
-
-                # Load image file.             
-                try:
-                    img = bpy.data.images.load(fnPNG)
-                except:
-                    raise NameError("Cannot load image %s" % fnPNG)
-
-                cTex= bpy.data.textures.new(fnPNG, type = 'IMAGE') # texProxy.GetProperty("FileName").SetElement(0, fnPNG)
-                cTex.image= img
-                
-                mtex = mat.texture_slots.add() # Add texture slot for color texture
-                mtex.scale[1]= -1
-                mtex.texture = cTex
-                mtex.texture_coords = 'UV'
-                mtex.use_map_color_diffuse = True 
-                # mtex.use_map_color_emission = True 
-                # mtex.emission_color_factor = 0.5
-                # mtex.use_map_density = True 
-                mtex.mapping = 'FLAT' 
-
+ 
+    bpy.ops.object.select_all(action='DESELECT') # default action is toggle
 
     ## no lamp - no texture (visible)
     lamp_data = bpy.data.lamps.new(name="Hemi", type='HEMI')
