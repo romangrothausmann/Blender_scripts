@@ -37,8 +37,7 @@ def loadX3DandTex(fnX3D, pref, suff, yscale, resetUV= False):
             layerList= ['G', 'A', 'B']
             for j, s in enumerate(layerList):
 
-                fnPNG= pref + "-" + s + "_" + suff + ".png"
-                print(fnPNG)
+                fnPNG= "//" + pref + "-" + s + "_" + suff + ".png"
 
                 try:
                     img = bpy.data.images.load(fnPNG)
@@ -126,7 +125,9 @@ def main():
                     space.viewport_shade = 'MATERIAL' # or TEXTURE with GLSL http://blender.stackexchange.com/questions/17745/changing-viewport-shading-with-python
             for region in area.regions:
                 if region.type == 'WINDOW':
-                    override = {'area': area, 'region': region}
+                    override = bpy.context.copy() # http://blender.stackexchange.com/questions/6101/poll-failed-context-incorrect-example-bpy-ops-view3d-background-image-add
+                    override['area']= area
+                    override['region']= region
                     bpy.ops.view3d.view_all(override) # does not work in batch mode! i.e. with blender -b -P ...  http://blender.stackexchange.com/questions/7418/zoom-to-selection-in-python-gives-runtimeerror
 
 
