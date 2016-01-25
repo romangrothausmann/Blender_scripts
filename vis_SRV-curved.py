@@ -46,13 +46,13 @@ def loadX3DandTex(fnX3D, pref, suff, yscale, resetUV= False):
 
                 cTex= bpy.data.textures.new(fnPNG, type = 'IMAGE') # texProxy.GetProperty("FileName").SetElement(0, fnPNG)
                 cTex.image= img
-                
+
                 mtex = mat.texture_slots.add() # Add texture slot for color texture
                 mtex.scale[1]= yscale
                 mtex.texture = cTex
                 mtex.texture_coords = 'UV'
-                mtex.use_map_color_diffuse = True 
-                mtex.mapping = 'FLAT' 
+                mtex.use_map_color_diffuse = True
+                mtex.mapping = 'FLAT'
 
     return impObjs
 
@@ -111,7 +111,7 @@ def main():
         loadX3DandTex(fnX3D= "xy-plane_%04d.x3d"%(z), pref= "plane", suff= "z@%04d"%(z), yscale=1, resetUV= True)
         bpy.ops.object.group_link(group="SRV-curved")
 
- 
+
     bpy.ops.object.select_all(action='DESELECT') # default action is toggle
 
     ## no lamp - no texture (visible)
