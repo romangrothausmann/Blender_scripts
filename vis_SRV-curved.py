@@ -23,9 +23,9 @@ def loadX3DandTex(fnX3D, pref, suff, yscale, resetUV= False):
             guiName= pref + "_" + suff
             obj.name= guiName
             obj.data.name= guiName
+            bpy.context.scene.objects.active = obj # make active needed for EDIT and grouping
 
             if(resetUV): # http://science-o-matics.com/2013/04/how-to-python-scripting-in-blender-2-material-und-textur/
-                bpy.context.scene.objects.active = obj
                 bpy.ops.object.mode_set(mode='EDIT') # switch to edit mode
                 bpy.ops.uv.reset()
                 bpy.ops.object.mode_set(mode='OBJECT') # switch back to object mode
@@ -97,14 +97,19 @@ def main():
     for obj in scene.objects:
         scene.objects.unlink(obj)
 
+    bpy.ops.group.create(name="SRV-curved")
 
     loadX3DandTex(fnX3D= "yz-plane.x3d", pref= "plane", suff="x@0250", yscale=-1)
+    bpy.ops.object.group_link(group="SRV-curved")
+
     loadX3DandTex(fnX3D= "xz-plane.x3d", pref= "plane", suff="y@0250", yscale=-1)
+    bpy.ops.object.group_link(group="SRV-curved")
 
     zList = [129, 640, 1131, 1533, 1601, 1773, 2156, 2190, 2389, 2497, 2578, 2692, 2945, 3041, 3250, 4046]
     #zList = [129, 640, 1131, 2692, 3250, 4046]
     for i, z in enumerate(zList):
         loadX3DandTex(fnX3D= "xy-plane_%04d.x3d"%(z), pref= "plane", suff= "z@%04d"%(z), yscale=1, resetUV= True)
+        bpy.ops.object.group_link(group="SRV-curved")
 
  
     bpy.ops.object.select_all(action='DESELECT') # default action is toggle
