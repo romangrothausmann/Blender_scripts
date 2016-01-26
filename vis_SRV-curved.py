@@ -25,6 +25,9 @@ def loadX3DandTex(fnX3D, pref, suff, yscale, resetUV= False):
             obj.data.name= guiName
             bpy.context.scene.objects.active = obj # make active needed for EDIT and grouping
 
+            bpy.ops.object.rotation_clear() # or different bpy.ops.import_scene.x3d(axis_forward='Z', axis_up='Y')
+            bpy.ops.object.location_clear() # just to be safe
+
             if(resetUV): # http://science-o-matics.com/2013/04/how-to-python-scripting-in-blender-2-material-und-textur/
                 bpy.ops.object.mode_set(mode='EDIT') # switch to edit mode
                 bpy.ops.uv.reset()
