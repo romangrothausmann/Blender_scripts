@@ -61,7 +61,7 @@ def main():
             for i, mat in enumerate(obj.data.materials):
                 mat.name= args.input+str(i)
 
-            for f in ob.data.faces: ##smooth is set per face!
+            for f in obj.data.polygons: ##smooth is set per face!
                 f.use_smooth = True
 
 
