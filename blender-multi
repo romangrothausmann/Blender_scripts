@@ -1,0 +1,84 @@
+#!/bin/bash
+
+
+### spread blender rendering over multiple threads (or remote machines)
+## # threads should be chosen such that single-threaded execution time (e.g. building of octree of raytree) averages out, limited by max RAM, see http://www.elysiun.com/forum/showthread.php?323540-Make-blender-work-harder-raise-the-CPU-usage&s=1e0847e4a735e78795f7a033c131d701&p=2557337&viewfull=1#post2557337
+
+usg="Usage: $0 <blend-file> <dest-folder> <start-frame> <end-frame> <# threads> [script.py]"
+
+if test -z $2; then
+    echo $usg
+    exit
+fi
+
+if test -z $3; then
+    echo $usg
+    exit
+fi
+
+if test -z $4; then
+    echo $usg
+    exit
+fi
+
+if test -z $5; then
+    echo $usg
+    exit
+fi
+
+if test $# -ge 6; then
+    opts=" -P $6 -- ${@:7}"
+fi
+echo $opts
+
+
+startf=$3
+endf=$4
+total=$[$endf - $startf + 1]
+
+
+count=$5
+erange=$[$total / $count]
+rest=$[$total - $erange * $count]
+
+#if [ $rest != 0 ]; then
+#        range=$[$range + 1]
+#fi
+
+echo "Letting each of $count threads do $erange renders. (rest: $rest)"
+
+end=$[$startf - 1]
+rest_count=0
+PIDs=()
+
+for ((i=1; i <= $count; i++)); do
+        if  test $rest_count -lt $rest ; then
+                rest_count=$[$rest_count + 1]
+                range=$erange
+        else range=$[$erange - 1]
+        fi
+        begin=$[$end + 1]
+        end=$[$begin + $range]
+
+        command="/usr/bin/time -v nice -n 10 blender -b $1 -noaudio -o //$2/render_######.png -F PNG -s $begin -e $end -a $opts"
+        echo $command
+
+        $command >& blender_${i}_${begin}-${end}.out &  PIDs+=($!) #adds PID of /usr/bin/time
+done
+
+sleep 30 #blender needs some time to start during which the nice-value is not yet set
+echo -e "\nBlender PIDs (pid user nice command):"
+ps -eo pid,user,nice,command | grep "blender -b" | grep -v nice
+
+# http://stackoverflow.com/questions/356100/how-to-wait-in-bash-for-several-subprocesses-to-finish-and-return-exit-code-0
+for pid in ${PIDs[*]}; do
+    wait $pid
+done
+
+echo "done."
+
+
+
+
+
+
