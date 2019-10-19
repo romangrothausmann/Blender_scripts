@@ -191,6 +191,7 @@ def main():
 
     print("Total path length: ", tLengSum, "  with an interpolation resolution of: ", curve.resolution_u)
 
+    curve.path_duration= 1.0 # below normalized to 1 (default 100)
     fc.keyframe_points.insert(0, 0.0) #zero's pos
     lengSum= 0
     timeSum= 0
