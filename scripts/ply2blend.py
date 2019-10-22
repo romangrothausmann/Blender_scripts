@@ -22,7 +22,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=usage_text)
 
-    parser.add_argument("-i", "--input", dest="input", metavar='FILE', required=True, help="Input STL file.")
+    parser.add_argument("-i", "--input", dest="input", metavar='FILE', required=True, help="Input PLY file.")
     parser.add_argument("-o", "--output", dest="output", metavar='FILE', required=True, help="Output file to save the blender curve in. Suffix sets the format: Blender (.blend); DXF (.dxf); STL (.stl); Videoscape (.obj); VRML 1.0 (.wrl)")
 
     args = parser.parse_args(argv)  # In this example we wont use the args
@@ -51,7 +51,7 @@ def main():
         bpy.data.meshes.remove(item) # delete all meshes http://blenderscripting.blogspot.de/2012/03/deleting-objects-from-scene.html
 
 
-    bpy.ops.import_mesh.stl(filepath= args.input) # https://www.blender.org/api/blender_python_api_2_76b_release/bpy.ops.import_mesh.html
+    bpy.ops.import_mesh.ply(filepath= args.input) # https://docs.blender.org/api/blender_python_api_2_76b_release/bpy.ops.import_mesh.html?highlight=ply#bpy.ops.import_mesh.ply
 
     for obj in scene.objects:
         if obj.type == 'MESH':
