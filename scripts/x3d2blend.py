@@ -63,7 +63,7 @@ def main():
             for i, mat in enumerate(obj.data.materials):
                 mat.name= args.input+str(i)
 
-            for f in obj.data.polygons: ##smooth is set per face!
+            for f in obj.data.polygons: ##smooth is set per face! https://blender.stackexchange.com/questions/91685/using-python-to-set-object-shading-to-smooth#91687
                 f.use_smooth = True
 
 
