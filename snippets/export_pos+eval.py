@@ -5,10 +5,13 @@ import bpy
 
 scn = bpy.context.scene
 path = bpy.data.objects["Path"]
+cam = bpy.data.objects["Camera"]
 
 curve = path.data.animation_data.action.fcurves.find('eval_time')
+loc = cam.location
 
 with open('data_out.txt', 'w') as out_file:
     for f in range(scn.frame_start, scn.frame_end):
         eT = curve.evaluate(f)
-        out_file.write('{},{:.3f}\n'.format(f, eT))
+        scn.frame_set(f) # needed for follow path constraint (without baking)
+        out_file.write('{},{:.3f},{:.3f},{:.3f},{:.3f}\n'.format(f, eT, loc.x, loc.y, loc.z))
