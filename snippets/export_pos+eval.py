@@ -15,4 +15,4 @@ with open('data_out.txt', 'w') as out_file:
         eT = curve.evaluate(f)
         scn.frame_set(f) # needed for follow path constraint (without baking)
         x, y, z = mw.to_translation() # or loc, rot, scale = obj.matrix_world.decompose() https://docs.blender.org/api/blender_python_api_current/mathutils.html#mathutils.Matrix.decompose
-        out_file.write('{},{:.3f},{:.3f},{:.3f},{:.3f}\n'.format(f, eT, x, y, z))
+        out_file.write('{},{:.6f},{:.6f},{:.6f},{:.6f}\n'.format(f, eT, x, y, z))
