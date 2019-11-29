@@ -8,10 +8,11 @@ path = bpy.data.objects["Path"]
 cam = bpy.data.objects["Camera"]
 
 curve = path.data.animation_data.action.fcurves.find('eval_time')
-loc = cam.location
+mw = cam.matrix_world
 
 with open('data_out.txt', 'w') as out_file:
     for f in range(scn.frame_start, scn.frame_end):
         eT = curve.evaluate(f)
         scn.frame_set(f) # needed for follow path constraint (without baking)
-        out_file.write('{},{:.3f},{:.3f},{:.3f},{:.3f}\n'.format(f, eT, loc.x, loc.y, loc.z))
+        x, y, z = mw.to_translation() # or loc, rot, scale = obj.matrix_world.decompose() https://docs.blender.org/api/blender_python_api_current/mathutils.html#mathutils.Matrix.decompose
+        out_file.write('{},{:.3f},{:.3f},{:.3f},{:.3f}\n'.format(f, eT, x, y, z))
