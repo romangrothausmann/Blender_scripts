@@ -4,7 +4,7 @@
 ### spread blender rendering over multiple threads (or remote machines)
 ## # threads should be chosen such that single-threaded execution time (e.g. building of octree of raytree) averages out, limited by max RAM, see http://www.elysiun.com/forum/showthread.php?323540-Make-blender-work-harder-raise-the-CPU-usage&s=1e0847e4a735e78795f7a033c131d701&p=2557337&viewfull=1#post2557337
 
-usg="Usage: $0 <blend-file> <dest-folder> <start-frame> <end-frame> <# threads> [script.py]"
+usg="Usage: $0 <blend-file> <dest-folder> <start-frame> <end-frame> <# threads> [options]"
 
 if test -z $2; then
     echo $usg
@@ -27,7 +27,7 @@ if test -z $5; then
 fi
 
 if test $# -ge 6; then
-    opts=" -P $6 -- ${@:7}"
+    opts="${@:6}"
 fi
 echo $opts
 
