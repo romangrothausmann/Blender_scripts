@@ -4,7 +4,7 @@
 ### spread blender rendering over multiple threads (or remote machines)
 ## # threads should be chosen such that single-threaded execution time (e.g. building of octree of raytree) averages out, limited by max RAM, see http://www.elysiun.com/forum/showthread.php?323540-Make-blender-work-harder-raise-the-CPU-usage&s=1e0847e4a735e78795f7a033c131d701&p=2557337&viewfull=1#post2557337
 
-usg="Usage: $0 <blend-file> <dest-folder> <start-frame> <end-frame> <# threads> [options]"
+usg="Usage: $0 <blend-file> <scene> <dest-folder> <start-frame> <end-frame> <# threads> [options]"
 
 if test -z $2; then
     echo $usg
@@ -26,18 +26,24 @@ if test -z $5; then
     exit
 fi
 
-if test $# -ge 6; then
-    opts="${@:6}"
+if test -z $6; then
+    echo $usg
+    exit
+fi
+
+if test $# -ge 7; then
+    opts="${@:7}"
 fi
 echo $opts
 
-
-startf=$3
-endf=$4
+scene=$2
+dest=$3
+startf=$4
+endf=$5
 total=$[$endf - $startf + 1]
 
 
-count=$5
+count=$6
 erange=$[$total / $count]
 rest=$[$total - $erange * $count]
 
@@ -60,7 +66,7 @@ for ((i=1; i <= $count; i++)); do
         begin=$[$end + 1]
         end=$[$begin + $range]
 
-        command="/usr/bin/time -v nice -n 10 blender -b $1 -noaudio -o //$2/render_######.png -F PNG -s $begin -e $end -a $opts"
+        command="/usr/bin/time -v nice -n 10 blender -b $1 -S $scene -noaudio -o //${dest}/render_######.png -F PNG -s $begin -e $end -a $opts"
         echo $command
 
         $command >& blender_${i}_${begin}-${end}.out &  PIDs+=($!) #adds PID of /usr/bin/time
